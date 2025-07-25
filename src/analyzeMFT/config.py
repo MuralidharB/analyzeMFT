@@ -20,14 +20,17 @@ class AnalysisProfile:
     export_format: str = "csv"
     compute_hashes: bool = False
     verbosity: int = 0
-    debug: int = 0    chunk_size: int = 1000
+    debug: int = 0
+    chunk_size: int = 1000
     enable_anomaly_detection: bool = False
-    file_size_threshold_mb: int = 100    date_filter_start: Optional[str] = None
+    file_size_threshold_mb: int = 100
+    date_filter_start: Optional[str] = None
     date_filter_end: Optional[str] = None
     file_types_include: Optional[list] = None
     file_types_exclude: Optional[list] = None
     min_file_size: Optional[int] = None
-    max_file_size: Optional[int] = None    include_deleted: bool = True
+    max_file_size: Optional[int] = None
+    include_deleted: bool = True
     include_system_files: bool = True
     custom_fields: Optional[list] = None
 
@@ -41,12 +44,16 @@ class ConfigManager:
         self._load_default_profiles()
     
     def _get_config_dir(self) -> Path:
-        """Get the configuration directory"""        home_config = Path.home() / '.analyzeMFT'
+        """Get the configuration directory"""
+        home_config = Path.home() / '.analyzeMFT'
         if home_config.exists() or not home_config.parent.exists():
-            return home_config        return Path.cwd() / '.analyzeMFT'
+            return home_config
+        return Path.cwd() / '.analyzeMFT'
     
     def _load_default_profiles(self) -> None:
-        """Load default analysis profiles"""        self.profiles['default'] = AnalysisProfile()        self.profiles['quick'] = AnalysisProfile(
+        """Load default analysis profiles"""
+        self.profiles['default'] = AnalysisProfile()
+        self.profiles['quick'] = AnalysisProfile(
             name="quick",
             description="Quick analysis with minimal output",
             export_format="csv",
@@ -54,7 +61,8 @@ class ConfigManager:
             verbosity=0,
             chunk_size=5000,
             include_deleted=False
-        )        self.profiles['forensic'] = AnalysisProfile(
+        )
+        self.profiles['forensic'] = AnalysisProfile(
             name="forensic",
             description="Comprehensive forensic analysis",
             export_format="csv",
@@ -64,7 +72,8 @@ class ConfigManager:
             enable_anomaly_detection=True,
             include_deleted=True,
             include_system_files=True
-        )        self.profiles['performance'] = AnalysisProfile(
+        )
+        self.profiles['performance'] = AnalysisProfile(
             name="performance",
             description="Optimized for large MFT files",
             export_format="sqlite",
@@ -90,7 +99,8 @@ class ConfigManager:
                     config = yaml.safe_load(f)
                 elif config_path.suffix.lower() == '.json':
                     config = json.load(f)
-                else:                    content = f.read()
+                else:
+                    content = f.read()
                     f.seek(0)
                     if content.strip().startswith('{'):
                         config = json.load(f)
@@ -110,12 +120,15 @@ class ConfigManager:
             raise
     
     def load_profile_from_config(self, config: Dict[str, Any], profile_name: str = "custom") -> AnalysisProfile:
-        """Create an AnalysisProfile from configuration dictionary"""        try:
+        """Create an AnalysisProfile from configuration dictionary"""
+        try:
             validated_config = validate_config_schema(config)
             self.logger.info(f"Configuration validation successful for profile '{profile_name}'")
         except ConfigValidationError as e:
             self.logger.error(f"Configuration validation failed for profile '{profile_name}': {e}")
-            raise        profile_data = asdict(self.profiles['default'])        profile_data.update(validated_config)
+            raise
+        profile_data = asdict(self.profiles['default'])
+        profile_data.update(validated_config)
         profile_data['name'] = profile_name
         
         return AnalysisProfile(**profile_data)
@@ -123,7 +136,8 @@ class ConfigManager:
     def save_profile(self, profile: AnalysisProfile, config_path: Union[str, Path]) -> None:
         """Save an analysis profile to a configuration file"""
         config_path = Path(config_path)
-        config_data = asdict(profile)        config_path.parent.mkdir(parents=True, exist_ok=True)
+        config_data = asdict(profile)
+        config_path.parent.mkdir(parents=True, exist_ok=True)
         
         try:
             with open(config_path, 'w', encoding='utf-8') as f:
@@ -171,12 +185,14 @@ class ConfigManager:
             "include_deleted": True,
             "include_system_files": True,
             "custom_fields": None
-        }        config_path.parent.mkdir(parents=True, exist_ok=True)
+        }
+        config_path.parent.mkdir(parents=True, exist_ok=True)
         
         try:
             with open(config_path, 'w', encoding='utf-8') as f:
                 if config_path.suffix.lower() in ['.yml', '.yaml']:
-                    if not HAS_YAML:                        config_path = config_path.with_suffix('.json')
+                    if not HAS_YAML:
+                        config_path = config_path.with_suffix('.json')
                         json.dump(sample_config, f, indent=2)
                     else:
                         yaml.dump(sample_config, f, default_flow_style=False, indent=2)
@@ -194,9 +210,11 @@ def get_default_config_paths() -> list:
     config_dir = Path.home() / '.analyzeMFT'
     cwd_config = Path.cwd()
     
-    paths = []    for ext in ['json', 'yaml', 'yml']:
+    paths = []
+    for ext in ['json', 'yaml', 'yml']:
         paths.append(config_dir / f'config.{ext}')
-        paths.append(config_dir / f'analyzeMFT.{ext}')    for ext in ['json', 'yaml', 'yml']:
+        paths.append(config_dir / f'analyzeMFT.{ext}')
+    for ext in ['json', 'yaml', 'yml']:
         paths.append(cwd_config / f'analyzeMFT.{ext}')
         paths.append(cwd_config / f'.analyzeMFT.{ext}')
     
